@@ -11,7 +11,7 @@ import matplotlib;
 import matplotlib.pyplot as plt;
 from matplotlib.widgets import Slider, Button, RadioButtons;
 
-st.title(RLC Transient Response — HW5)
+st.title("RLC Transient Response — HW5")
 
 ## CHANGELOG ##
 # 2019/02/13: initial version (code based on slider_demo.py in the matplotlib documentation). JR <jr@berkeley.edu>
