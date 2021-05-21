@@ -6,12 +6,13 @@ import altair as alt
 
 # HW 5 Demo
 
-import numpy as np;
-import matplotlib;
-import matplotlib.pyplot as plt;
-from matplotlib.widgets import Slider, Button, RadioButtons;
+from math import log10
+import numpy as np
+import matplotlib
+import matplotlib.pyplot as plt
+from matplotlib.widgets import Slider, Button, RadioButtons
 
-st.title("RLC Transient Response — HW5")
+st.title("Damping in RLC Circuits")
 
 ## CHANGELOG ##
 # 2019/02/13: initial version (code based on slider_demo.py in the matplotlib documentation). JR <jr@berkeley.edu>
@@ -24,8 +25,13 @@ class structtype: # MATLAB-like struct, useful for organization
     pass
 
 ## SETUP
-
 parms = structtype()
+
+
+cond = st.sidebar.radio("Damping Condition:",
+('Playground', 'Undamped', 'Underdamped', 'Critically Damped', 'Overdamped'))
+
+## DEFAUT
 parms.R = 1
 parms.C = 10e-9 # 10nF
 parms.L = 25e-6 # 25uH
@@ -33,6 +39,60 @@ parms.f0 = 1/np.sqrt(parms.L*parms.C)/2/np.pi
 parms.tauC = parms.R*parms.C
 parms.tauL = parms.L/parms.R
 parms.alpha = parms.R/(2*parms.L)
+Cmin = parms.C/3 * 10 ** 8
+Cmax = 3*parms.C * 10 ** 8
+
+## Undamped
+if cond == 'Undamped':
+    parms.R = 0
+    parms.C = 10e-9 # 10nF
+    parms.L = 25e-6 # 25uH
+    parms.f0 = 1/np.sqrt(parms.L*parms.C)/2/np.pi
+    parms.tauC = parms.R*parms.C
+    parms.tauL = np.inf # parms.L/parms.R
+    parms.alpha = parms.R/(2*parms.L)
+    Cmin = parms.C/3 * 10 ** 8
+    Cmax = 3*parms.C * 10 ** 8
+
+## Overdamped
+if cond == 'Overdamped':
+    parms.R = 1000
+    parms.C = 10e-9 # 10nF
+    parms.L = 25e-6 # 25uH
+    parms.f0 = 1/np.sqrt(parms.L*parms.C)/2/np.pi
+    parms.tauC = parms.R*parms.C
+    parms.tauL = parms.L/parms.R
+    parms.alpha = parms.R/(2*parms.L)
+    Cmin = parms.C/3 * 10 ** 8
+    Cmax = 3*parms.C * 10 ** 8
+
+## Underdamped
+if cond == 'Underdamped':
+    parms.R = 1
+    parms.C = 10e-9 # 10nF
+    parms.L = 25e-6 # 25uH
+    parms.f0 = 1/np.sqrt(parms.L*parms.C)/2/np.pi
+    parms.tauC = parms.R*parms.C
+    parms.tauL = parms.L/parms.R
+    parms.alpha = parms.R/(2*parms.L)
+    Cmin = parms.C/3 * 10 ** 8
+    Cmax = 3*parms.C * 10 ** 8
+
+## Critically Damped
+if cond == 'Critically Damped':
+    parms.C = 10e-9 # 10nF
+    parms.L = 25e-6 # 25uH
+    parms.R = 2 * np.sqrt(parms.L / parms.C)
+    parms.f0 = 1/np.sqrt(parms.L*parms.C)/2/np.pi
+    parms.tauC = parms.R*parms.C
+    parms.tauL = parms.L/parms.R
+    parms.alpha = parms.R/(2*parms.L)
+    Cmin = parms.C/3 * 10 ** 8
+    Cmax = 3*parms.C * 10 ** 8
+
+# st.write(parms.R)
+# st.write(parms.C)
+# st.write(parms.L)
 
 def vc_of_t(t, initcond): # solution for vc of t given an initial condition
     """
@@ -91,15 +151,24 @@ plt.xlabel('time (seconds)'); #
 plt.ylabel('vc(t) (Volts)');
 plt.title('vc(t), series RLC circuit');
 
-Cmin = parms.C/3 * 10 ** 8
-Cmax = 3*parms.C * 10 ** 8
 N_C = 100
 sC = st.sidebar.slider('C (10^8)', Cmin, Cmax); # streamlit slider
+# if cond == 'Playground':
+    # sC = st.sidebar.slider('C (10^8)', Cmin, Cmax); # streamlit slider
+# else:
+    # sC = st.sidebar.slider('C (10^8)', parms.C, parms.C); # streamlit slider
+    # sC = parms.C
 
 Rmin = 1e-2
 Rmax = 1e4
 N_R = 100
-sR = st.sidebar.slider('log(R)', Rmin, Rmax); # streamlit slider
+# sR = st.sidebar.slider('log(R)', log10(Rmin), log10(Rmax)); # streamlit slider
+if cond == 'Playground':
+    sR = st.sidebar.slider('log(R)', log10(Rmin), log10(Rmax)); # streamlit slider
+elif cond == 'Undamped':
+    sR = -np.inf
+else:
+    sR = log10(parms.R)
 
 textstr = '\n'.join((
     r'C=%g' % (parms.C, ),
@@ -111,14 +180,16 @@ textH = ax.text(0.0, 1.2, textstr, transform=ax.transAxes, fontsize=14,
 
 ## UPDATE PLOT
 
-C = sC / 10 ** 8    # C = sC.val;
-logR = np.log10(sR) # logR = sR.val;
+C = sC / 10 ** 8
+R = 10 ** sR
 
-R = 10**logR
 parms.R = R
 parms.C = C
 parms.tauC = parms.R*parms.C
-parms.tauL = parms.L/parms.R
+if cond == 'Undamped':
+    parms.tauL = np.inf
+else:
+    parms.tauL = parms.L/parms.R
 parms.alpha = parms.R/(2*parms.L)
 parms.f0 = 1/(2*np.pi*np.sqrt(parms.L*parms.C))
 
