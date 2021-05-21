@@ -27,7 +27,6 @@ class structtype: # MATLAB-like struct, useful for organization
 ## SETUP
 parms = structtype()
 
-
 cond = st.sidebar.radio("Damping Condition:",
 ('Playground', 'Undamped', 'Underdamped', 'Critically Damped', 'Overdamped'))
 
@@ -90,11 +89,9 @@ if cond == 'Critically Damped':
     Cmin = parms.C/3 * 10 ** 8
     Cmax = 3*parms.C * 10 ** 8
 
-# st.write(parms.R)
-# st.write(parms.C)
-# st.write(parms.L)
 
-def vc_of_t(t, initcond): # solution for vc of t given an initial condition
+
+def vc_of_t(t, initcond): # Solve Vc(t) given t and an initial condition Vc(0)
     """
         vc(t) = K1 e^{lambda_1 t} + K2 e^{lambda_1 t}, where:
             lambda1/2 = -alpha +- sqrt(alpha^2 - 4 pi^2 f0^2)
@@ -109,7 +106,7 @@ def vc_of_t(t, initcond): # solution for vc of t given an initial condition
     retval = np.real(K1*np.exp(lambda1*t) + K2*np.exp(lambda2*t))
     return(retval)
 
-def vcenvelope_of_t(t, initcond): # approximate envelope for vc of t given an initial condition
+def vcenvelope_of_t(t, initcond): # Approximate envelope for Vc(t) given t and an initial condition Vc(0)
     """
         vc(t) = K1 e^{lambda_1 t} + K2 e^{lambda_1 t}, where:
             lambda1/2 = -alpha +- sqrt(alpha^2 - 4 pi^2 f0^2)
@@ -139,30 +136,23 @@ vcs = vc_of_t(ts, initcond=1)
 vcenvelope = vcenvelope_of_t(ts, initcond=1)
 
 ## PLOTTING
-
-fig, ax = plt.subplots(); # like MATLAB's figure()
-plt.subplots_adjust(top=0.75); # changes the margins of the plot
+fig, ax = plt.subplots()
+plt.subplots_adjust(top=0.75)
 
 l, = plt.plot(ts, vcs, linewidth=1, color='red', linestyle='-')
 lenv, = plt.plot(ts, vcenvelope, color='green', linewidth=3, linestyle=':')
 
 plt.grid(color='k', linestyle='-.', linewidth=0.5)
-plt.xlabel('time (seconds)'); # 
-plt.ylabel('vc(t) (Volts)');
-plt.title('vc(t), series RLC circuit');
+plt.xlabel('time (seconds)')
+plt.ylabel('vc(t) (Volts)')
+plt.title('vc(t), series RLC circuit')
 
 N_C = 100
-sC = st.sidebar.slider('C (10^8)', Cmin, Cmax); # streamlit slider
-# if cond == 'Playground':
-    # sC = st.sidebar.slider('C (10^8)', Cmin, Cmax); # streamlit slider
-# else:
-    # sC = st.sidebar.slider('C (10^8)', parms.C, parms.C); # streamlit slider
-    # sC = parms.C
+sC = st.sidebar.slider('C (10^8)', Cmin, Cmax) # streamlit slider
 
 Rmin = 1e-2
 Rmax = 1e4
 N_R = 100
-# sR = st.sidebar.slider('log(R)', log10(Rmin), log10(Rmax)); # streamlit slider
 if cond == 'Playground':
     sR = st.sidebar.slider('log(R)', log10(Rmin), log10(Rmax)); # streamlit slider
 elif cond == 'Undamped':
@@ -179,7 +169,6 @@ textH = ax.text(0.0, 1.2, textstr, transform=ax.transAxes, fontsize=14,
         verticalalignment='top', bbox=props)
 
 ## UPDATE PLOT
-
 C = sC / 10 ** 8
 R = 10 ** sR
 
